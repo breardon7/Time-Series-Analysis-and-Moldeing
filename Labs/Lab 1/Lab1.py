@@ -24,25 +24,25 @@ ax1.plot(df['Date'], df['Sales'])
 ax2.plot(df['Date'], df['AdBudget'])
 ax3.plot(df['Date'], df['GDP'])'''
 
-plt.plot(df['Date'], df['Sales'])
+plt.plot(df['Date'], df['Sales'], label='Sales')
 plt.grid(color='gray', linestyle='-', linewidth=1)
-plt.legend()
+plt.legend(loc='upper left')
 plt.title('Sales by Year')
 plt.xlabel('Date')
 plt.ylabel('USD')
 plt.show()
 
-plt.plot(df['Date'], df['AdBudget'])
+plt.plot(df['Date'], df['AdBudget'], label='AdBudget')
 plt.grid(color='gray', linestyle='-', linewidth=1)
-plt.legend()
+plt.legend(loc='upper left')
 plt.title('AdBudget by Year')
 plt.xlabel('Date')
 plt.ylabel('USD')
 plt.show()
 
-plt.plot(df['Date'], df['GDP'])
+plt.plot(df['Date'], df['GDP'], label='GDP')
 plt.grid(color='gray', linestyle='-', linewidth=1)
-plt.legend()
+plt.legend(loc='upper left')
 plt.title('GDP by Year')
 plt.xlabel('Date')
 plt.ylabel('USD')
@@ -76,11 +76,12 @@ for i in range(len(df['Sales'])):
 
 fig_sales, (ax1, ax2) = plt.subplots(2)
 fig_sales.suptitle('Sales')
-ax1.plot(df['Date'], sales_rolling_mean)
+ax1.plot(df['Date'], sales_rolling_mean, label='rolling mean')
 ax1.set_title('Rolling Mean')
-ax2.plot(df['Date'], sales_rolling_var)
+ax2.plot(df['Date'], sales_rolling_var, label='rolling variance')
 ax2.set_title('Rolling Variance')
 plt.tight_layout
+plt.legend(loc='upper left')
 plt.show()
 
 #  ADBudget
@@ -98,11 +99,12 @@ for i in range(len(df['AdBudget'])):
 
 fig_sales, (ax1, ax2) = plt.subplots(2)
 fig_sales.suptitle('AdBudget')
-ax1.plot(df['Date'], adb_rolling_mean)
+ax1.plot(df['Date'], adb_rolling_mean, label='rolling mean')
 ax1.set_title('Rolling Mean')
-ax2.plot(df['Date'], adb_rolling_var)
+ax2.plot(df['Date'], adb_rolling_var, label='rolling variance')
 ax2.set_title('Rolling Variance')
 plt.tight_layout
+plt.legend(loc='upper left')
 plt.show()
 
 #  GDP
@@ -120,11 +122,12 @@ for i in range(len(df['GDP'])):
 
 fig_sales, (ax1, ax2) = plt.subplots(2)
 fig_sales.suptitle('GDP')
-ax1.plot(df['Date'], gdp_rolling_mean)
+ax1.plot(df['Date'], gdp_rolling_mean, label='rolling mean')
 ax1.set_title('Rolling Mean')
-ax2.plot(df['Date'], gdp_rolling_var)
+ax2.plot(df['Date'], gdp_rolling_var, label='rolling variance')
 ax2.set_title('Rolling Variance')
 plt.tight_layout
+plt.legend(loc='upper left')
 plt.show()
 
 # Question 4
