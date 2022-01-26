@@ -59,6 +59,11 @@ adb_var = df['AdBudget'].var()
 adb_std = df['AdBudget'].std()
 print('The AdBudget mean is : {} and the variance is : {} with standard deviation : {}'.format(adb_mean, adb_var, adb_std))
 
+gdp_mean = df['GDP'].mean()
+gdp_var = df['GDP'].var()
+gdp_std = df['GDP'].std()
+print('The GDP mean is : {} and the variance is : {} with standard deviation : {}'.format(gdp_mean, gdp_var, gdp_std))
+
 # Question 3
 
 #  Sales
@@ -76,9 +81,10 @@ for i in range(len(df['Sales'])):
 
 fig_sales, (ax1, ax2) = plt.subplots(2)
 fig_sales.suptitle('Sales')
-ax1.plot(df['Date'], sales_rolling_mean, label='rolling mean')
+ax1.plot(sales_rolling_mean, label='rolling mean', c='r')
+plt.legend(loc='upper left')
 ax1.set_title('Rolling Mean')
-ax2.plot(df['Date'], sales_rolling_var, label='rolling variance')
+ax2.plot(sales_rolling_var, label='rolling variance', c='b')
 ax2.set_title('Rolling Variance')
 plt.tight_layout
 plt.legend(loc='upper left')
@@ -99,9 +105,10 @@ for i in range(len(df['AdBudget'])):
 
 fig_sales, (ax1, ax2) = plt.subplots(2)
 fig_sales.suptitle('AdBudget')
-ax1.plot(df['Date'], adb_rolling_mean, label='rolling mean')
+ax1.plot(adb_rolling_mean, label='rolling mean', c='r')
+plt.legend(loc='upper left')
 ax1.set_title('Rolling Mean')
-ax2.plot(df['Date'], adb_rolling_var, label='rolling variance')
+ax2.plot(adb_rolling_var, label='rolling variance', c='b')
 ax2.set_title('Rolling Variance')
 plt.tight_layout
 plt.legend(loc='upper left')
@@ -122,9 +129,10 @@ for i in range(len(df['GDP'])):
 
 fig_sales, (ax1, ax2) = plt.subplots(2)
 fig_sales.suptitle('GDP')
-ax1.plot(df['Date'], gdp_rolling_mean, label='rolling mean')
+ax1.plot(gdp_rolling_mean, label='rolling mean', c='r')
+plt.legend(loc='upper left')
 ax1.set_title('Rolling Mean')
-ax2.plot(df['Date'], gdp_rolling_var, label='rolling variance')
+ax2.plot(gdp_rolling_var, label='rolling variance', c='b')
 ax2.set_title('Rolling Variance')
 plt.tight_layout
 plt.legend(loc='upper left')

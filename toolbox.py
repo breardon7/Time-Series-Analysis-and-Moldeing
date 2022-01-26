@@ -17,9 +17,9 @@ def plot_rolling_mean_var(data, title):
 
     fig_sales, (ax1, ax2) = plt.subplots(2)
     fig_sales.suptitle(title)
-    ax1.plot(data, rolling_mean)
+    ax1.plot(rolling_mean)
     ax1.set_title('Rolling Mean')
-    ax2.plot(data, rolling_var)
+    ax2.plot(rolling_var)
     ax2.set_title('Rolling Variance')
     plt.tight_layout
     plt.show()
