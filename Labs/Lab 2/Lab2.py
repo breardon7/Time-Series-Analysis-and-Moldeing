@@ -80,7 +80,10 @@ correlation coefficient is -0.76.
 '''
 
 # question 6
-sns.pairplot(df, kind="kde", diag_kind = 'auto')
-sns.pairplot(df, kind="hist", diag_kind = 'auto')
+sns.pairplot(df, kind="kde", diag_kind = 'hist')
+plt.show()
+sns.pairplot(df, kind="hist", diag_kind = 'hist')
+plt.show()
 # question 7
-sns.heatmap(df)
+sns.heatmap(df[['Sales','AdBudget','GDP']])
+plt.show()
