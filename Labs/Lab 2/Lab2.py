@@ -40,3 +40,47 @@ plt.title('Sales by GDP')
 plt.grid(color='gray', linestyle='-', linewidth=1)
 plt.show()
 
+correlation_coefficent_cal(df['Sales'], df['GDP'])
+'''
+The calculated correlation coefficient makes sense with respect
+to the scatter plot since the scatter trends negatively and the 
+correlation coefficient is -0.63.
+'''
+
+# question 4
+plt.scatter(df['Sales'], df['AdBudget'], c = 'r')
+plt.legend(loc='upper left')
+plt.xlabel('AdBudget')
+plt.ylabel('Sales')
+plt.title('Sales by AdBudget')
+plt.grid(color='gray', linestyle='-', linewidth=1)
+plt.show()
+
+correlation_coefficent_cal(df['Sales'], df['AdBudget'])
+'''
+The calculated correlation coefficient makes sense with respect
+to the scatter plot since the scatter trends positively and the 
+correlation coefficient is 0.90.
+'''
+
+# question 5
+plt.scatter(df['GDP'], df['AdBudget'], c = 'b')
+plt.legend(loc='upper left')
+plt.xlabel('AdBudget')
+plt.ylabel('GDP')
+plt.title('GDP by AdBudget')
+plt.grid(color='gray', linestyle='-', linewidth=1)
+plt.show()
+
+correlation_coefficent_cal(df['AdBudget'], df['GDP'])
+'''
+The calculated correlation coefficient makes sense with respect
+to the scatter plot since the scatter trends negatively and the 
+correlation coefficient is -0.76.
+'''
+
+# question 6
+sns.pairplot(df, kind="kde", diag_kind = 'auto')
+sns.pairplot(df, kind="hist", diag_kind = 'auto')
+# question 7
+sns.heatmap(df)

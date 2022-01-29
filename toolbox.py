@@ -1,3 +1,4 @@
+import numpy as np
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.stattools import kpss
 import matplotlib.pyplot as plt
@@ -6,17 +7,16 @@ import pandas as pd
 def plot_rolling_mean_var(data, title):
     rolling_var = []
     for i in range(len(data)):
-        iter_var = data.loc[:i].var()
-        rolling_var.append(iter_var)
+        # iter_var = data.loc[:i].var()
+        rolling_var.append(np.var(data[0:i]))
 
     rolling_mean = []
     for i in range(len(data)):
-        iter_mean = data.loc[:i].mean()
-        rolling_mean.append(iter_mean)
+        # iter_mean = data.loc[:i].mean()
+        rolling_mean.append(np.mean(data[0:i]))
 
-
-    fig_sales, (ax1, ax2) = plt.subplots(2)
-    fig_sales.suptitle(title)
+    fig, (ax1, ax2) = plt.subplots(2)
+    fig.suptitle(title)
     ax1.plot(rolling_mean)
     ax1.set_title('Rolling Mean')
     ax2.plot(rolling_var)
@@ -49,6 +49,15 @@ def difference(dataset, interval=1):
         diff.append(value)
     return diff
 
-# def corr_coef(x, y):
+def correlation_coefficent_cal(x,y):
+    numer = 0
+    denom_x = 0
+    denom_y = 0
+    for i in range(len(x)):
+        numer += ((x[i] - np.mean(x)) * (y[i] - np.mean(y)))
+        denom_x += (x[i] - np.mean(x))**2
+        denom_y += (y[i] - np.mean(y))**2
+    r = numer / (np.sqrt(denom_x) * np.sqrt(denom_y))
+    print(r)
 
 

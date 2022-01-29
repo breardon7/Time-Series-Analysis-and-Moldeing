@@ -29,6 +29,7 @@ ADF_Cal(CO2_In)
 plot_rolling_mean_var(CO2_In, 'Europe')
 # kpss_test(CO2_In)
 
+
 Europe = ['Estonia', 'Sweden', 'France', 'Germany', 'Hungary', 'Italy']
 CO2 = df.loc[Europe, :]
 CO2.loc['year'] = Year
