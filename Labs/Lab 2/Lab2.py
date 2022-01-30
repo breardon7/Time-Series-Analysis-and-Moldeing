@@ -84,6 +84,7 @@ sns.pairplot(df, kind="kde", diag_kind = 'hist')
 plt.show()
 sns.pairplot(df, kind="hist", diag_kind = 'hist')
 plt.show()
+
 # question 7
-sns.heatmap(df[['Sales','AdBudget','GDP']])
+sns.heatmap(df[['Sales','AdBudget','GDP']].corr(), annot=True)
 plt.show()
