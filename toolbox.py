@@ -60,4 +60,19 @@ def correlation_coefficent_cal(x,y):
     r = numer / (np.sqrt(denom_x) * np.sqrt(denom_y))
     print(r)
 
+def autocorrelation(x, lag=1):
+    n = len(x)
+    variance = x.var()
+    x = x - x.mean()
+    r = np.correlate(x, x, mode='full')[-n:]
+    assert np.allclose(r, np.array([(x[:n - k] * x[-(n - k):]).sum() for k in range(n)]))
+    result = r / (variance * (np.arange(n, 0, -1)))
+
+    plt.acorr(result, maxlags = lag)
+    plt.title('Autocorrelation')
+    plt.ylabel('Magnitude')
+    plt.xlabel('Lags')
+    plt.grid(True)
+    plt.show()
+
 
