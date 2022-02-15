@@ -75,4 +75,22 @@ def autocorrelation(x, lag=1):
     plt.grid(True)
     plt.show()
 
+def average_forecast(original):
+    prediction = []
+    for i in range(len(original)):
+        prediction.append(round((sum(original[:i+1])/(i+1))))
+    return prediction
+
+def error(original, prediction):
+    error = []
+    for i in range(len(original)):
+        error.append(prediction[i] - original[i])
+    return error
+
+def error_squared(error):
+    error_squared = []
+    for i in range(len(error)):
+        error_squared.append(error[i] ** 2)
+    return error_squared
+
 
