@@ -84,7 +84,7 @@ def average_forecast(original):
 def error(original, prediction):
     error = []
     for i in range(len(original)):
-        error.append(prediction[i] - original[i])
+        error.append(original[i] - prediction[i])
     return error
 
 def error_squared(error):
@@ -93,4 +93,11 @@ def error_squared(error):
         error_squared.append(error[i] ** 2)
     return error_squared
 
+def MSE(original, prediction):
+    error_squared = 0
+    for i in range(len(original)):
+        error = original[i] - prediction[i]
+        error_squared += error ** 2
+    mse = error_squared/len(original)
+    return mse
 
