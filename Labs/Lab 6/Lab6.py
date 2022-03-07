@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from toolbox import ACF, cal_rolling_mean_var
 
+
 # question 1
 sample_count  = 1000
 y = np.random.normal(0, .1, sample_count)
@@ -27,4 +28,6 @@ cal_rolling_mean_var(e_t, np.arange(2, 1000), metric='AR', unit='Sample')
 plt.show()
 
 print('First five values of y(t): ', y[:5])
-print('The rolling variance and mean of the sample data shows that the data is stationary as it levels off. \nAdditionally, the ACF plot indicates that there is no relationship between present and past values, which allows us to assume the data is stationary.')
+print('The rolling variance and mean of the sample data\nshows that the data is stationary as it levels off. \nAdditionally, the ACF plot indicates that there is no relationship \nbetween present and past values, which allows us to assume the data is stationary.')
+
+# question 2
