@@ -7,6 +7,7 @@ import statsmodels.api as sm
 import seaborn as sns
 import matplotlib.pyplot as plt
 import warnings
+from scipy.stats import ttest_ind
 warnings.filterwarnings('ignore')
 
 df = pd.read_csv(r'C:\Users\brear\OneDrive\Desktop\Grad School\Time-Series-Analysis-and-Moldeing\Datasets\auto.clean.csv')
@@ -251,5 +252,7 @@ print('\nThe estimated variance of forecast error is: %0.6f' % variance_fore)
 
 # results explained
 print('\nThe estimated variance of the prediction errors ({}) is larger \
-than that of the estimated\nvariance of the forecast errors. This \
+than that of the estimated\nvariance of the forecast errors ({}). This \
 means the forecast is more accurate than the prediction.'.format(variance_pred, variance_fore))
+
+
