@@ -239,3 +239,57 @@ def autocorrelation_plot(x, lag=1, title=''):
     plt.xlabel('Lags')
     plt.grid(True)
     plt.show()
+
+def simulate_MA(array):
+    while True:
+        try:
+            m1 = int(input("Enter first MA: "))
+            break
+        except ValueError:
+            print('Please enter a single integer value.')
+            continue
+    print("MA 1:", m1)
+
+    # first order MA
+
+    length = len(array)
+    t1 = np.zeros(length)
+    if m1 % 2 == 0:
+        upper_trail = int(m1 / 2)
+        lower_trail = int(m1 / 2 - 1)
+    else:
+        upper_trail = int((m1 - 1) / 2)
+        lower_trail = int((m1 - 1) / 2)
+
+    for t in range(length):
+        if t > 0:
+            t1[t] = sum(array[t - lower_trail:t + upper_trail]) / m1
+
+    # second order MA
+
+    t2 = np.zeros(len(t1))
+    if m1 % 2 == 0:
+        while True:
+            try:
+                m2 = int(input("Enter second MA: "))
+                break
+            except ValueError:
+                print('Please enter a single integer value.')
+                continue
+        print("MA 2:", m2)
+
+    if m1 % 2 == 0:
+        upper_trail = int(m1 / 2)
+        lower_trail = int(m1 / 2 - 1)
+    else:
+        upper_trail = int((m1 - 1) / 2)
+        lower_trail = int((m1 - 1) / 2)
+
+    for t in range(len(t1)):
+        if t > 0:
+            t2[t] = sum(t1[t-lower_trail:t+upper_trail])/m1
+
+    if m1 % 2 == 0:
+        return t1, t2
+    else:
+        return t1
