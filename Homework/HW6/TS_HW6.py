@@ -1,11 +1,14 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from toolbox import simulate_MA
+from toolbox import simulate_MA, ADF_Cal
 
 # question 1
 df = pd.read_csv(r'C:\Users\brear\OneDrive\Desktop\Grad School\Time-Series-Analysis-and-Moldeing\Datasets\AirPassengers.csv')
 passengers = df['#Passengers']
+
+ADF_Cal(passengers)
+ADF_Cal(simulate_MA(passengers))
 
 t1, t2 = simulate_MA(passengers)
 
@@ -40,6 +43,8 @@ ax3.set_title('MA-7')
 ax4.set_title('MA-9')
 plt.tight_layout
 plt.legend(loc='upper left')
+fig.text(0.5, 0.04, 'Month', ha='center')
+fig.text(0.04, 0.5, 'Passenger Count', va='center', rotation='vertical')
 plt.show()
 
 # question 3
@@ -64,7 +69,18 @@ ax3.set_title('MA-8')
 ax4.set_title('MA-10')
 plt.tight_layout
 plt.legend(loc='upper left')
+fig.text(0.5, 0.04, 'Month', ha='center')
+fig.text(0.04, 0.5, 'Passenger Count', va='center', rotation='vertical')
 plt.show()
+
+# question 4
+
+ADF_Cal(passengers)
+ADF_Cal(simulate_MA(passengers))
+
+print('The results of the ADF tests are nearly identical. Both tests show an ADF \nstatistic being greater than the critical values, meaning we fail \n to reject the null hypothesis and assume the datasets are both stationary.')
+
+# question 5
 
 
 
