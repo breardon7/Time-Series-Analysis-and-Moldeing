@@ -1,13 +1,11 @@
+import numpy as np
+import pandas as pd
+from pandas import Series
+import matplotlib.pyplot as plt
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.stattools import kpss
 import math
 from scipy import signal
-from statsmodels.tsa.stattools import adfuller, kpss
-import pandas as pd
-import numpy as np
-from sys import platform
-import statsmodels.tsa.holtwinters as ets
-import seaborn as sns
-from matplotlib import pyplot as plt
-import warnings
 
 
 def cal_rolling_mean_var(y_data, x_data, metric='', unit=''):
@@ -606,15 +604,3 @@ def gpac_calc(ry, na, nb):
     plt.title("Generalized Partial Autocorrelation(GPAC) Table")
     plt.show()
     print(result)
-
-def auto_correlation_cal(series, lags):
-    y = np.array(series).copy()
-    y_mean = np.mean(series)
-    correlation = []
-    for lag in np.arange(1, lags + 1):
-        numerator_part_1 = y[lag:] - y_mean
-        numerator_part_2 = y[:-lag] - y_mean
-        numerator = sum(numerator_part_1 * numerator_part_2)
-        denominator = sum((y - y_mean) ** 2)
-        correlation.append(numerator / denominator)
-    return pd.Series(correlation)

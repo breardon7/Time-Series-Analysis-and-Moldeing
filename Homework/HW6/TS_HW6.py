@@ -1,14 +1,12 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from toolbox import simulate_MA, ADF_Cal
+from toolbox import simulate_MA, ADF_Cal, seasonality_strength
+from statsmodels.tsa.seasonal import STL
 
 # question 1
 df = pd.read_csv(r'C:\Users\brear\OneDrive\Desktop\Grad School\Time-Series-Analysis-and-Moldeing\Datasets\AirPassengers.csv')
 passengers = df['#Passengers']
-
-ADF_Cal(passengers)
-ADF_Cal(simulate_MA(passengers))
 
 t1, t2 = simulate_MA(passengers)
 
@@ -78,9 +76,31 @@ plt.show()
 ADF_Cal(passengers)
 ADF_Cal(simulate_MA(passengers))
 
-print('The results of the ADF tests are nearly identical. Both tests show an ADF \nstatistic being greater than the critical values, meaning we fail \n to reject the null hypothesis and assume the datasets are both stationary.')
+print('The results of the ADF tests are nearly identical. Both tests show an ADF \nstatistic being greater than the critical values, meaning we fail \nto reject the null hypothesis and assume the datasets are both stationary.')
 
 # question 5
+print("\n")
+print("=========STL DECOMPOSITION============")
+res = STL(np.array(passengers).flatten(), period=12).fit()
+res.plot()
+plt.show()
 
+# question 6
+plt.title("Seasonally Adjusted Data vs Original Data")
+plt.xlabel("Original Data")
+plt.ylabel("Seasonally Adjusted Data")
+plt.plot(df.index, res.seasonal, label='Adjusted')
+plt.plot(df.index, passengers, label='Original')
+plt.legend()
+plt.show()
+
+rt = np.subtract(np.subtract(passengers, res.trend), res.seasonal)
+rt_seasonal = np.subtract(rt, res.seasonal)
+rt_trend = np.subtract(rt, res.trend)
+
+# question 7
+print("The strength of seasonality is: " + str(seasonality_strength(rt, rt_seasonal)))
+# question 8
+print("The strength of the trend is: " + str(seasonality_strength(rt, rt_trend)))
 
 

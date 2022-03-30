@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from toolbox import ACF, cal_rolling_mean_var
+import Toolbox
 from scipy import signal
 
 print("--------------------Question 1--------------------")
@@ -22,10 +22,10 @@ plt.ylabel('Value')
 plt.xlabel('Sample')
 plt.show()
 
-ACF(y, 20, 'AR Data')
+Toolbox.ACF(y, 20, 'AR Data')
 plt.show()
 
-cal_rolling_mean_var(y, np.arange(sample_count), metric='AR', unit='Sample')
+Toolbox.cal_rolling_mean_var(y, np.arange(sample_count), metric='AR', unit='Sample')
 plt.show()
 
 print('First five values of y(t): ', y[:5])
@@ -37,6 +37,9 @@ num = [1, 0, 0]
 den = [1, -0.5, -0.2]
 
 np.random.seed(42)
+T = 1000
+mean = 0
+std = np.sqrt(1)
 
 e = np.random.normal(mean, std, size=T)
 
@@ -58,7 +61,7 @@ np.random.seed(42)
 order = 2
 samples = 1000
 y = Toolbox.simulate_AR(mean, std, samples)
-lse = Toolbox.least_square_estimate(y1, samples, order)
+lse = Toolbox.least_square_estimate(y, samples, order)
 
 # 5000
 samples = 5000
