@@ -1,14 +1,14 @@
-import math
-from scipy import signal
-from statsmodels.tsa.stattools import adfuller, kpss
-import pandas as pd
 import numpy as np
-from sys import platform
-import statsmodels.tsa.holtwinters as ets
+import pandas as pd
+from pandas import Series
+import matplotlib.pyplot as plt
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.stattools import kpss
+import math
+from scipy import signal, linalg
+import statsmodels.api as sm
 import seaborn as sns
-from matplotlib import pyplot as plt
-import warnings
-
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 def cal_rolling_mean_var(y_data, x_data, metric='', unit=''):
     df = pd.DataFrame(columns=['Rolling_Mean', 'Rolling_Variance'])
@@ -98,7 +98,30 @@ def ACF(timeseries_data, lags, metric=''):
     plt.xlabel("Lags")
     plt.ylabel("ACF")
     plt.axhspan(-m, m, alpha=0.2, color='blue')
-    # use plt.show() in main for graphs to show
+    plt.grid()
+    plt.show()
+
+    return auto_corr
+
+
+def ACF_no_plot(timeseries_data, lags):
+    auto_corr = []
+    timeseries_data_mean = np.mean(timeseries_data)
+    length = len(timeseries_data)
+    denominator = 0  # 0th lag adjusted
+    x_axis = np.arange(0, lags + 1)
+    m = 1.96 / np.sqrt(length)
+
+    for denom_t in range(0, length):
+        denominator = denominator + (timeseries_data[denom_t] - timeseries_data_mean) ** 2
+
+    for tau in range(0, lags + 1):
+        numerator = 0
+        for num_t in range(tau, length):
+            numerator = numerator + (timeseries_data[num_t] - timeseries_data_mean) * (
+                    timeseries_data[num_t - tau] - timeseries_data_mean)
+        auto_corr.append((numerator / denominator))
+
     return auto_corr
 
 
@@ -280,7 +303,7 @@ def simulate_AR(mean, std, T):
         elif i == 1:
             y[1] = e[1] + (0.5 * y[0])
         else:
-            y[i] = + e[i] + (0.5 * y[i - 1]) + (0.2 * y[i - 2])
+            y[i] = e[i] + (0.5 * y[i - 1]) + (0.2 * y[i - 2])
     return y
 
 
@@ -327,8 +350,7 @@ def generalized_least_square_estimate(samples, order, ARparam):
     for j in range(order):
         for i in range(T_prime + 1):
             X[i][j] = -1 * y[order + i - k]
-        k += 1
-    # X = pd.DataFrame([-1*y[1:T_prime+2],-1*y[0:T_prime+1]]).T
+        k = k + 1
 
     X_transpose = np.transpose(X)
     temp_1 = np.linalg.inv(X_transpose.dot(X))
@@ -352,269 +374,228 @@ def simulate_MA(T):
             y[i] = e[i] + (0.5 * e[i - 1]) + (0.2 * e[i - 2])
     return y
 
-def gpac_calc(ry, na, nb):
-    result = pd.DataFrame()
-    k1 = []
-    k2 = []
-    k3 = []
-    k4 = []
-    k5 = []
-    k6 = []
-    k7 = []
-    k8 = []
-    k9 = []
-    k10 = []
-    for k in range(1, nb):
-        for j in range(na):
-            if k == 1:
-                k1.append(round(ry[j + k] / ry[j], 3))
-            if k == 2:
-                numerator2 = [[ry[j], ry[j + 1]], [ry[j + k - 1], ry[j + k]]]
-                denominator2 = [[ry[j], ry[abs(j - k + 1)]], [ry[abs(j + k - 1)], ry[j]]]
-                k2.append(round(np.linalg.det(numerator2) / np.linalg.det(denominator2), 3))
-            if k == 3:
-                numerator3 = [[ry[j], ry[abs(j - 1)], ry[j + 1]],
-                              [ry[j + 1], ry[j], ry[j + 2]],
-                              [ry[j + k - 1], ry[j + k - 2], ry[j + k]]]
-                denominator3 = [[ry[j], ry[abs(j - 1)], ry[abs(j - k + 1)]], [ry[j + 1], ry[j], ry[abs(j - k + 2)]],
-                                [ry[j + k - 1], ry[j + k - 2], ry[j]]]
-                k3.append(round(np.linalg.det(numerator3) / np.linalg.det(denominator3), 3))
-            if k == 4:
-                numerator4 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[j + 1]],
-                              [ry[j + 1], ry[j], ry[abs(j - 1)], ry[j + 2]],
-                              [ry[j + 2], ry[j + 1], ry[j], ry[j + 3]],
-                              [ry[j + k - 1], ry[j + k - 2], ry[j + k - 3], ry[j + k]]]
 
-                denominator4 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - k + 1)]],
-                                [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - k + 2)]],
-                                [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - k + 3)]],
-                                [ry[j + k - 1], ry[j + k - 2], ry[j + k - 3], ry[j]]]
+def generate_arma():
 
-                k4.append(round(np.linalg.det(numerator4) / np.linalg.det(denominator4), 3))
-            if k == 5:
-                numerator5 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[j + 1]],
-                              [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[j + 2]],
-                              [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[j + 3]],
-                              [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[j + 4]],
-                              [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[j + k]]]
+    np.random.seed(42)
+    T = int(input("Enter the number of data samples: "))
+    mean_e = float(input("Enter the mean of white noise: "))
+    var_e = int(input("Enter the variance of the white noise: "))
+    na = int(input("Enter AR order:"))
+    nb = int(input("Enter MA order:"))
+    AR_coeff = [float(input("Enter the order {} coefficient of AR".format(i))) for i in range(1, na + 1)]
+    MA_coeff = [float(input("Enter the order {} coefficient of MA".format(i))) for i in range(1, nb + 1)]
+    AR_coeff.insert(0, 1)
+    MA_coeff.insert(0, 1)
 
-                denominator5 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - k + 1)]],
-                                [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - k + 2)]],
-                                [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - k + 3)]],
-                                [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - k + 4)]],
-                                [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[j]]]
-                k5.append(round(np.linalg.det(numerator5) / np.linalg.det(denominator5), 3))
-            if k == 6:
-                numerator6 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[j + 1]],
-                              [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[j + 2]],
-                              [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[j + 3]],
-                              [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[j + 4]],
-                              [ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[j + 5]],
-                              [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[abs(j + k - 5)], ry[j + k]]]
-                denominator6 = [
-                    [ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[abs(j - k + 1)]],
-                    [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - k + 2)]],
-                    [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - k + 3)]],
-                    [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - k + 4)]],
-                    [ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - k + 5)]],
-                    [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[abs(j + k - 5)], ry[j]]]
-                k6.append(round(np.linalg.det(numerator6) / np.linalg.det(denominator6), 3))
+    arma_process = sm.tsa.ArmaProcess(AR_coeff, MA_coeff)
+    mean_y = mean_e * (1 + sum(MA_coeff)) / (1 + sum(AR_coeff))
+    y = arma_process.generate_sample(T, scale=np.sqrt(var_e)) + mean_y
 
-            if k == 7:
-                numerator7 = [
-                    [ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[abs(j - 5)], ry[j + 1]],
-                    [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[j + 2]],
-                    [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[j + 3]],
-                    [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[j + 4]],
-                    [ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[j + 5]],
-                    [ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[j + 6]],
-                    [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[abs(j + k - 5)], ry[abs(j + k - 6)],
-                     ry[j + k]]]
-                denominator7 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[abs(j - 5)],
-                                 ry[abs(j - k + 1)]],
-                                [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)],
-                                 ry[abs(j - k + 2)]],
-                                [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                                 ry[abs(j - k + 3)]],
-                                [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)],
-                                 ry[abs(j - k + 4)]],
-                                [ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - k + 5)]],
-                                [ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - k + 6)]],
-                                [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[abs(j + k - 5)],
-                                 ry[abs(j + k - 6)], ry[j]]]
+    return y
 
-                k7.append(round(np.linalg.det(numerator7) / np.linalg.det(denominator7), 3))
 
-            if k == 8:
-                numerator8 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[abs(j - 5)],
-                               ry[abs(j - 6)], ry[j + 1]],
-                              [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)],
-                               ry[abs(j - 5)], ry[j + 2]],
-                              [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                               ry[abs(j - 4)], ry[j + 3]],
-                              [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                               ry[j + 4]],
-                              [ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)],
-                               ry[j + 5]],
-                              [ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[j + 6]],
-                              [ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[j + 7]],
-                              [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[abs(j + k - 5)], ry[abs(j + k - 6)],
-                               ry[abs(j + k - 7)], ry[j + k]]]
+def generate_arma_no_questions(T, mean_e, var_e, na, nb, AR_coeff, MA_coeff):
 
-                denominator8 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[abs(j - 5)],
-                                 ry[abs(j - 6)], ry[abs(j - k + 1)]],
-                                [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)],
-                                 ry[abs(j - 5)], ry[abs(j - k + 2)]],
-                                [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                                 ry[abs(j - 4)], ry[abs(j - k + 3)]],
-                                [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                                 ry[abs(j - k + 4)]],
-                                [ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)],
-                                 ry[abs(j - k + 5)]],
-                                [ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)],
-                                 ry[abs(j - k + 6)]],
-                                [ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j],
-                                 ry[abs(j - k + 7)]],
-                                [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[abs(j + k - 5)],
-                                 ry[abs(j + k - 6)], ry[abs(j + k - 7)], ry[j]]]
+    np.random.seed(42)
+    arma_process = sm.tsa.ArmaProcess(AR_coeff, MA_coeff)
+    mean_y = mean_e * (1 + sum(MA_coeff)) / (1 + sum(AR_coeff))
+    y = arma_process.generate_sample(T, scale=np.sqrt(var_e)) + mean_y
 
-                k8.append(round(np.linalg.det(numerator8) / np.linalg.det(denominator8), 3))
+    return y
 
-            if k == 9:
-                numerator9 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[abs(j - 5)],
-                               ry[abs(j - 6)], ry[abs(j - 7)], ry[j + 1]],
-                              [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)],
-                               ry[abs(j - 5)], ry[abs(j - 6)], ry[j + 2]],
-                              [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                               ry[abs(j - 4)], ry[abs(j - 5)], ry[j + 3]],
-                              [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                               ry[abs(j - 4)],
-                               ry[j + 4]],
-                              [ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)],
-                               ry[abs(j - 3)],
-                               ry[j + 5]],
-                              [ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)],
-                               ry[abs(j - 2)], ry[j + 6]],
-                              [ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)],
-                               ry[j + 7]],
-                              [ry[j + 7], ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j],
-                               ry[j + 8]],
-                              [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[abs(j + k - 5)], ry[abs(j + k - 6)],
-                               ry[abs(j + k - 7)], ry[abs(j + k - 8)], ry[j + k]]]
 
-                denominator9 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[abs(j - 5)],
-                                 ry[abs(j - 6)], ry[abs(j - 7)], ry[abs(j - k + 1)]],
-                                [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)],
-                                 ry[abs(j - 5)], ry[abs(j - 6)], ry[abs(j - k + 2)]],
-                                [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                                 ry[abs(j - 4)], ry[abs(j - 5)], ry[abs(j - k + 3)]],
-                                [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                                 ry[abs(j - 4)],
-                                 ry[abs(j - k + 4)]],
-                                [ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)],
-                                 ry[abs(j - 3)],
-                                 ry[abs(j - k + 5)]],
-                                [ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)],
-                                 ry[abs(j - 2)], ry[abs(j - k + 6)]],
-                                [ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j],
-                                 ry[abs(j - 1)],
-                                 ry[abs(j - k + 7)]],
-                                [ry[j + 7], ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j],
-                                 ry[abs(j - k + 8)]],
-                                [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[abs(j + k - 5)],
-                                 ry[abs(j + k - 6)],
-                                 ry[abs(j + k - 7)], ry[abs(j + k - 8)], ry[j]]]
+def GPAC(acf, len_j, len_k, title="GPAC Table"):
 
-                k9.append(round(np.linalg.det(numerator9) / np.linalg.det(denominator9), 3))
+    len_k = len_k + 1   # na starts with 1, nb with 0
+    gpac = np.empty(shape=(len_j,   len_k)) # k is x-axis, j is y-axis
 
-            if k == 10:
-                numerator10 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[abs(j - 5)],
-                                ry[abs(j - 6)], ry[abs(j - 7)], ry[abs(j - 8)], ry[j + 1]],
-                               [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)],
-                                ry[abs(j - 5)], ry[abs(j - 6)], ry[abs(j - 7)], ry[j + 2]],
-                               [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                                ry[abs(j - 4)], ry[abs(j - 5)], ry[abs(j - 6)], ry[j + 3]],
-                               [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                                ry[abs(j - 4)], ry[abs(j - 5)],
-                                ry[j + 4]],
-                               [ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)],
-                                ry[abs(j - 3)], ry[abs(j - 4)],
-                                ry[j + 5]],
-                               [ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)],
-                                ry[abs(j - 2)], ry[abs(j - 3)], ry[j + 6]],
-                               [ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)],
-                                ry[abs(j - 2)],
-                                ry[j + 7]],
-                               [ry[j + 7], ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j],
-                                ry[abs(j - 1)],
-                                ry[j + 8]],
-                               [ry[j + 8], ry[j + 7], ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1],
-                                ry[j],
-                                ry[j + 9]],
-                               [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[abs(j + k - 5)],
-                                ry[abs(j + k - 6)],
-                                ry[abs(j + k - 7)], ry[abs(j + k - 8)], ry[abs(j + k - 9)], ry[j + k]]]
+    for k in range(1, len_k):   # rows of GPAC table
+        num = np.empty(shape=(k, k))
+        denom = np.empty(shape=(k, k))
+        for j in range(0, len_j):            # columns of GPAC table
+            for row in range(0, k):          # rows of kxk matrix
+                for column in range(0, k):   # columns of kxk matrix
+                    if column < k - 1:       # acf for all except last column
+                        num[row][column] = acf[np.abs(j+(row-column))]
+                        denom[row][column] = acf[np.abs(j+(row-column))]
+                    else:
+                        num[row][column] = acf[np.abs(j+row+1)]
+                        denom[row][column] = acf[np.abs(j+(row-column))]
 
-                denominator10 = [[ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)], ry[abs(j - 5)],
-                                  ry[abs(j - 6)], ry[abs(j - 7)], ry[abs(j - 8)], ry[abs(j - k + 1)]],
-                                 [ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - 4)],
-                                  ry[abs(j - 5)], ry[abs(j - 6)], ry[abs(j - 7)], ry[abs(j - k + 2)]],
-                                 [ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)], ry[abs(j - 3)],
-                                  ry[abs(j - 4)], ry[abs(j - 5)], ry[abs(j - 6)], ry[abs(j - k + 3)]],
-                                 [ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)],
-                                  ry[abs(j - 3)],
-                                  ry[abs(j - 4)], ry[abs(j - 5)],
-                                  ry[abs(j - k + 4)]],
-                                 [ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)], ry[abs(j - 2)],
-                                  ry[abs(j - 3)], ry[abs(j - 4)],
-                                  ry[abs(j - k + 5)]],
-                                 [ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j], ry[abs(j - 1)],
-                                  ry[abs(j - 2)], ry[abs(j - 3)], ry[abs(j - k + 6)]],
-                                 [ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j],
-                                  ry[abs(j - 1)], ry[abs(j - 2)],
-                                  ry[abs(j - k + 7)]],
-                                 [ry[j + 7], ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2], ry[j + 1], ry[j],
-                                  ry[abs(j - 1)],
-                                  ry[abs(j - k + 8)]],
-                                 [ry[j + 8], ry[j + 7], ry[j + 6], ry[j + 5], ry[j + 4], ry[j + 3], ry[j + 2],
-                                  ry[j + 1], ry[j],
-                                  ry[abs(j - k + 9)]],
-                                 [ry[abs(j + k - 1)], ry[abs(j + k - 2)], ry[abs(j + k - 3)], ry[abs(j + k - 4)], ry[abs(j + k - 5)],
-                                  ry[abs(j + k - 6)],
-                                  ry[abs(j + k - 7)], ry[abs(j + k - 8)], ry[abs(j + k - 9)], ry[j]]]
+            num_determinant = round(np.linalg.det(num), 6)
+            denom_determinant = round(np.linalg.det(denom), 6)
 
-                k10.append(round(np.linalg.det(numerator10) / np.linalg.det(denominator10), 3))
-    if len(k1) > 0:
-        result["1"] = k1
-    if len(k2) > 0:
-        result["2"] = k2
-    if len(k3) > 0:
-        result["3"] = k3
-    if len(k4) > 0:
-        result["4"] = k4
-    if len(k5) > 0:
-        result["5"] = k5
-    if len(k6) > 0:
-        result["6"] = k6
-    if len(k7) > 0:
-        result["7"] = k7
-    if len(k8) > 0:
-        result["8"] = k8
-    if len(k9) > 0:
-        result["9"] = k9
-    sns.heatmap(result, annot=True, fmt='.3f')
-    plt.title("Generalized Partial Autocorrelation(GPAC) Table")
+            if denom_determinant == 0.0:
+                gpac[j][k] = np.inf     # when denominator is 0
+            else:
+                gpac[j][k] = round((num_determinant/denom_determinant), 2)
+
+    gpac = pd.DataFrame(gpac[:, 1:])                # exclude 0th column as k starts from 1
+    gpac.columns = [i for i in range(1, len_k)]     # re-index columns to start from 1
+
+    sns.heatmap(gpac, annot=True)
+    plt.title(title)
     plt.show()
-    print(result)
 
-def auto_correlation_cal(series, lags):
-    y = np.array(series).copy()
-    y_mean = np.mean(series)
-    correlation = []
-    for lag in np.arange(1, lags + 1):
-        numerator_part_1 = y[lag:] - y_mean
-        numerator_part_2 = y[:-lag] - y_mean
-        numerator = sum(numerator_part_1 * numerator_part_2)
-        denominator = sum((y - y_mean) ** 2)
-        correlation.append(numerator / denominator)
-    return pd.Series(correlation)
+
+def ACF_PACF_Plot(y, lags, title="ACF/PACF"):
+    acf = sm.tsa.stattools.acf(y, nlags=lags)
+    pacf = sm.tsa.stattools.pacf(y, nlags=lags)
+    fig = plt.figure()
+    fig.suptitle(title)
+    plt.subplot(211)
+    plot_acf(y, ax=plt.gca(), lags=lags)
+    plt.grid()
+    plt.subplot(212)
+    plot_pacf(y, ax=plt.gca(), lags=lags)
+    plt.grid()
+    fig.tight_layout(pad=3)
+    plt.show()
+
+
+def levenberg_marquardt(y, na, nb):
+
+    def generate_error_terms(theta, na, y):  # calculate errors using dlsim for SSE
+
+        np.random.seed(42)
+        den = theta[:na]  # den is na coefficients as theta is stacked na+nb
+        num = theta[na:]  # num is nb coefficients as theta is stacked na+nb
+
+        if len(den) > len(num):  # dlsim num and denom formatting
+            for x in range(len(den) - len(num)):
+                num = np.append(num, 0)
+        elif len(num) > len(den):
+            for x in range(len(num) - len(den)):
+                den = np.append(den, 0)
+
+        den = np.insert(den, 0, 1)
+        num = np.insert(num, 0, 1)
+        sys = (den, num, 1)
+        _, e = signal.dlsim(sys, y)
+        return e
+
+    def step1(y, na, nb, delta, theta):  # step1 reusable
+
+        n = na + nb
+        e = generate_error_terms(theta, na, y)
+        sse_old = np.dot(np.transpose(e), e)
+
+        X = np.empty(shape=(len(y), n))
+        for i in range(0, n):               # loop to calculate gradient
+            theta[i] = theta[i] + delta
+            e_i = generate_error_terms(theta, na, y)
+            x_i = (e - e_i) / delta
+            X[:, i] = x_i[:, 0]
+            theta[i] = theta[i] - delta  # theta reset
+
+        A = np.dot(np.transpose(X), X)
+        g = np.dot(np.transpose(X), e)
+
+        return A, g, X, sse_old
+
+    def step2(A, theta, mu, g, na, y):  # step 2 reusable
+
+        delta_theta = np.matmul(linalg.inv(A + (mu * np.identity(A.shape[0]))), g)
+        theta_new = theta + delta_theta
+        e_new = generate_error_terms(theta_new, na, y)  # calculate new error
+        sse_new = np.dot(np.transpose(e_new), e_new)
+        if np.isnan(sse_new):
+            sse_new = 10 ** 10
+
+        return sse_new, delta_theta, theta_new
+
+    def step3(y, na, nb):
+
+        N = len(y)  # number of samples
+        n = na+nb
+        mu = 0.01  # step size
+        mu_max = 10 ** 20  # max step size (arbitrary)
+        max_iterations = 100  # ideal convergence happens within 100 steps
+        delta = 10 ** -6  # learning rate
+        var_e = 0
+        covariance_theta_hat = 0
+
+        sse_list = []
+
+        theta = np.zeros(shape=(n, 1))  # step 0
+
+        for iterations in range(100):
+            A, g, X, sse_old = step1(y, na, nb, delta, theta)  # step 1
+            sse_new, delta_theta, theta_new = step2(A, theta, mu, g, na, y)  # step 2
+
+            sse_list.append(sse_old[0][0])
+            if iterations < max_iterations:
+
+                if sse_new < sse_old:
+                    # new parameters better than old parameters
+                    if linalg.norm(np.array(delta_theta), 2) < 10 ** -3:
+                        theta_hat = theta_new
+                        var_e = sse_new / (N - n)
+                        # inverse of hessian is covariance, used to calculate confidence
+                        covariance_theta_hat = var_e * linalg.inv(A)  # n by n
+                        print("Convergence")
+                        break
+                    else:
+                        # new parameters worse than old but algorithm hasn't converged
+                        # as mu starts reducing, algorithm goes towards gauss newton method
+                        theta = theta_new
+                        mu = mu / 10
+                while sse_new >= sse_old:
+                    # change in learning rate
+                    mu = mu * 10
+                    if mu > mu_max:
+                        print('No Convergence')
+                        break
+                    sse_new, delta_theta, theta_new = step2(A, theta, mu, g, na, y)
+            if iterations > max_iterations:
+                print('Maximum Iterations Reached: No Convergence')
+                break
+            theta = theta_new
+
+        return theta_new, sse_new, var_e, covariance_theta_hat, sse_list
+
+    def confidence_interval(theta, cov):
+        print("Confidence Interval of parameters")
+        for i in range(len(theta)):
+            lb = theta[i] - 2 * np.sqrt(cov[i, i])
+            ub = theta[i] + 2 * np.sqrt(cov[i, i])
+            print("{} < theta_{} < {}".format(lb, i, ub))
+
+    def find_roots(theta, na):
+        den = theta[:na]
+        num = theta[na:]
+        if len(den) > len(num):
+            for x in range(len(den) - len(num)):
+                num = np.append(num, 0)
+        elif len(num) > len(den):
+            for x in range(len(num) - len(den)):
+                den = np.append(den, 0)
+        else:
+            pass
+
+        den = np.insert(den, 0, 1)
+        num = np.insert(num, 0, 1)
+        print("Roots of numerator:", np.roots(num))
+        print("Roots of denominator:", np.roots(den))
+
+    def plot_sse(sse_list):
+        plt.plot(sse_list)
+        plt.xlabel('Iterations')
+        plt.ylabel('Error')
+        plt.title('SSE across iterations')
+        plt.show()
+
+
+    # execution step 0,1,2 included in function for step 3
+    theta, sse, var_e, covariance_theta_hat, sse_list = step3(y, na, nb)
+
+    print("Coefficients:", theta)
+    confidence_interval(theta, covariance_theta_hat)
+    print("Covariance Matrix of estimated parameters:\n", covariance_theta_hat)
+    print("Estimated variance of error:\n", var_e)
+    print(find_roots(theta, na))
+    plot_sse(sse_list)
+    return theta
+
+
