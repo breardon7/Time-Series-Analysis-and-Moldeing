@@ -43,7 +43,8 @@ na = 2
 nb = 2
 TS_functions.ACF_PACF_Plot(difference_data, 50, "ACF/PACF Difference Data")
 
-model = sm.tsa.ARMA(df.values, (na, nb)).fit(trend='nc', disp=0)
+# model = sm.tsa.ARMA(df.values, (na, nb)).fit(trend='nc', disp=0)
+model = sm.tsa.ARIMA(endog=df.values, order=(na, 0, nb)).fit()
 predictions = model.predict(start=0, end=len(df) - 1)
 errors = df.values - predictions
 
