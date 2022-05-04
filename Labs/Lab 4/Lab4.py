@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from statistics import variance
 import statsmodels.api as sm
-from toolbox import autocorrelation_plot
+from toolbox_old import auto_correlation_cal
 
 t_train = [112, 118, 132, 129, 121, 134, 148, 136, 119]
 t_test = [104, 118, 115, 126, 141]

@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from statsmodels.tsa.stattools import adfuller, kpss
+import statsmodels.tsa.holtwinters as ets
 
 def difference(dataset, interval):
    diff = []
@@ -100,3 +101,59 @@ def kpss_test(timeseries):
 
 def mse(errors):
    return  np.sum(np.power(errors,2))/len(errors)
+
+def average_forecast(train, test, type):
+    train_forecast = list()
+    test_forecast = list()
+    train_forecast.append(train[0])
+    for i in range(1, len(train) + 1):
+        train_forecast.append(np.mean(train[0:i]))
+    for i in range(0, len(test)):
+        test_forecast.append(train_forecast[-1])
+
+    if type == 'train':
+        return train_forecast
+    elif type == 'test':
+        return test_forecast
+
+
+def naive(x):
+    predicted = []
+    predicted.append(x[0])
+    for i in range(1, len(x)):
+        predicted.append(x[i-1])
+    return predicted
+
+
+def drift(train, test, type):
+    train_forecast = list()
+    test_forecast = list()
+    train_forecast.append(train[0])
+    for i in range(1, len(train) + 1):
+        train_forecast.append(train[i - 1] + (train[i - 1] - train[0]) / i)
+    for i in range(0, len(test)):
+        test_forecast.append(train[-1] + ((train[-1] - train[0]) / (len(train))) * (i + 1))
+
+    if type == 'train':
+        return train_forecast
+    elif type == 'test':
+        return test_forecast
+
+
+def ses(train, test, type, alpha=None):
+    train_forecast = list()
+    test_forecast = list()
+
+    if (alpha < 0) or (alpha > 1):
+        raise ValueError('Alpha value has to be integer/float between 0 and 1.')
+    train_forecast.append(train[0])
+    for i in range(1, len(train) + 1):
+        train_forecast.append(alpha * train[i - 1] + (1 - alpha) * train_forecast[i - 1])
+    test_forecast.append(alpha * train[-1] + (1 - alpha) * train_forecast[-1])
+    for i in range(1, len(test)):
+        test_forecast.append(alpha * train[-1] + (1 - alpha) * train_forecast[-1])
+
+    if type == 'train':
+        return train_forecast
+    elif type == 'test':
+        return test_forecast

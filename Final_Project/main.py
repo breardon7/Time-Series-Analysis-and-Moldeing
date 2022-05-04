@@ -19,17 +19,15 @@ df.set_index('Date', inplace = True)
 print(df.head())
 print(df.shape)
 
-# Move Target to first column
-target = 'Close'
-first_col = df.pop(target)
-df.insert(0, target, first_col)
 
-# 6.a: plot the Appliance vs time----------------------------------------------------
+# 6.a: plot the Close vs time----------------------------------------------------
 
+y = df['Close']
+X = df.drop(columns=['Close'])
 
 # applied second order differencing
-Diff_1 = toolbox.difference(df.Close, 1)
-Diff_2 = toolbox.difference(df.Close, 1)
+Diff_1 = toolbox.difference(y, 1)
+Diff_2 = toolbox.difference(y, 1)
 # Diff_1 = np.log(df.Close)
 DF = pd.DataFrame(Diff_1, index=df.index[1:])
 DF.rename(columns={0:'Close'}, inplace=True)
@@ -38,15 +36,15 @@ print(DF)
 
 plt.figure()
 plt.subplot(211)
-plt.plot(df.index, df.Close)
+plt.plot(y)
 plt.xlabel('Date')
-plt.xticks(df.index[:10287], fontsize= 10)
+plt.xticks(rotation=45)
 plt.ylabel('Close Price (USD')
 plt.title('Close Price Over Time')
 plt.subplot(212)
-plt.plot(DF.index, DF.Close)
+plt.plot(DF)
 plt.xlabel('Date')
-plt.xticks(DF.index[::10287], fontsize= 10)
+plt.xticks(rotation=45)
 plt.ylabel('Close Price (USD)')
 plt.title('Differenced Close Price Over Time')
 plt.tight_layout()
@@ -57,15 +55,15 @@ plt.show()
 # =============== #
 
 # plot rolling average
-toolbox.rolling_mv(df.Close, 'of Original Data')
-toolbox.rolling_mv(DF.Close, 'of Differenced Data')
+toolbox.rolling_mv(y, 'of Original Data')
+toolbox.rolling_mv(DF, 'of Differenced Data')
 
 # 6.b: ACF/PACF plots ACF Plot----------------------------------------------------
 
 # ACF plot of raw data
 plt.figure()
-bound = 1.96/np.sqrt(len(df.Close))
-toolbox.ACF_Plot(toolbox.autocorr(df.Close,90),90)
+bound = 1.96/np.sqrt(len(y))
+toolbox.ACF_Plot(toolbox.autocorr(y,90),90)
 plt.xlabel('Lags')
 plt.ylabel('ACF')
 plt.title('ACF Plot of Close Values (USD) 90 Lags')
@@ -75,7 +73,7 @@ plt.show()
 
 # ACF plot of differenced data
 plt.figure()
-bound = 1.96/np.sqrt(len(DF.Close))
+bound = 1.96/np.sqrt(len(DF))
 toolbox.ACF_Plot(toolbox.autocorr(DF.Close,90),90)
 plt.xlabel('Lags')
 plt.ylabel('ACF')
@@ -84,8 +82,8 @@ plt.axhspan(-bound,bound,alpha = .1, color = 'black')
 plt.tight_layout()
 plt.show()
 
-toolbox.PACF_ACF_Plot(df.Close,500, 'of Raw Data')
-toolbox.PACF_ACF_Plot(DF.Close,500, 'of Differenced Data')
+toolbox.PACF_ACF_Plot(y,500, 'of Raw Data')
+toolbox.PACF_ACF_Plot(DF,500, 'of Differenced Data')
 
 # Note: use ARMA model based on ACF/PACF drop off
 
@@ -103,25 +101,23 @@ plt.tight_layout()
 plt.show()
 
 # 6.d: train/test split
-X = df.values[:, 1:]
-y = df.values[:, 0]
 
 # raw data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, shuffle= False)
 # differenced data
 y_train_diff, y_test_diff = train_test_split(DF, shuffle= False, test_size=0.2)
 
 # 7 Stationary check
 # ADF null - data is not stationary
 # ADF alternative - data is stationary
-toolbox.ADF_Cal(df.Close) # raw data - non-stationary, p-value 1.0 & test statistic > critical values
-toolbox.ADF_Cal(DF.Close) # differenced - Data appeared to be stationary with p-value of 0.00000 & test statistic < critical values
+toolbox.ADF_Cal(y) # raw data - non-stationary, p-value 1.0 & test statistic > critical values
+toolbox.ADF_Cal(DF) # differenced - Data appeared to be stationary with p-value of 0.00000 & test statistic < critical values
 
 
 # kpss null - data is stationary
 # kpss alternative - data is non-stationary
-toolbox.kpss_test(df.Close) # raw data - p-value < 0.05, reject null; data is non-stationary
-toolbox.kpss_test(DF.Close) # differenced - p-value < 0.05, reject null; data is non-stationary
+toolbox.kpss_test(y) # raw data - p-value < 0.05, reject null; data is non-stationary
+toolbox.kpss_test(DF) # differenced - p-value < 0.05, reject null; data is non-stationary
 
 # 8: Time series decomposition
 
@@ -158,7 +154,7 @@ plt.plot(df.index,T, label= 'Trend')
 plt.plot(df.index,R, label= 'Residual')
 plt.plot(df.index,S, label= 'Seasonal')
 plt.title('Trend, Residual, and Seasonal Plot')
-plt.xticks(df.index[::10287], fontsize= 10)
+plt.xticks(rotation=45)
 plt.ylabel('Close Values (USD)')
 plt.xlabel('Time')
 plt.legend()
@@ -180,7 +176,7 @@ D_T = np.array(detrended)
 plt.figure()
 plt.plot(df.index,Close, label= 'Original Data', color = 'black')
 plt.plot(df.index,adjusted_seasonal.values, label= 'Adjusted Seasonal', color = 'yellow')
-plt.xticks(df.index[::10287], fontsize= 10)
+plt.xticks(rotation=45)
 plt.title('Seasonaly Adjusted Data vs. Differenced')
 plt.xlabel('Date')
 plt.ylabel('Close Values (USD)')
@@ -191,7 +187,7 @@ plt.show()
 plt.figure()
 plt.plot(df.index,Close, label= 'Original Data')
 plt.plot(df.index,detrended.values, label= 'Detrended')
-plt.xticks(df.index[::10287], fontsize= 10)
+plt.xticks(rotation=45)
 plt.title('Detrended Data vs. Original')
 plt.xlabel('Date')
 plt.ylabel('Close Values (USD)')
@@ -201,93 +197,98 @@ plt.show()
 
 # 9: Holt-Winter method
 
-# use training data to fit model
-model = ets.ExponentialSmoothing(y_train, damped_trend= True, trend='add').fit()
-
-# prediction on train set
-train_forecast = model.forecast(steps=len(y_train))
-train_forecast = pd.DataFrame(train_forecast, columns=['Close'])
-# made prediction on test set
-test_forecast = model.forecast(steps=len(y_test))
-test_forecast = pd.DataFrame(test_forecast, columns=['Close'])
-
-
-
-# print the summary
-print(model.summary())
-
-# model assessment
-
-# train data
-train_forecast_error = np.array(y_train - train_forecast)
-print("Mean square error for the Holt-Winter method prediction on Close Values (USD) is ", toolbox.mse(train_forecast_error).round(4))
-print(sm.stats.acorr_ljungbox(train_forecast_error, lags=[5], boxpierce=True, return_df=True))
-print('The Q value was found to be 23100.165439 with a p-value of 0.0')
-print('the mean of the Holt-winter model prediction error is', np.mean(train_forecast_error))
-print('the variance of the Holt-winter model prediction error is', np.var(train_forecast_error))
-print('the RMSE of the Holt-winter model prediction error is, ', mean_squared_error(y_train, train_forecast, squared=False))
-
-# test data
-test_forecast_error = np.array(y_test - test_forecast)
-print("Mean square error for the Holt-Winter method forecasting on Close Values (USD) is ", toolbox.mse(test_forecast_error).round(4))
-print(sm.stats.acorr_ljungbox(test_forecast_error, lags=[5], boxpierce=True, return_df=True))
-print('The Q value was found to be 5138.065419 with a p-value of 0.0')
-print('the mean of the Holt-winter model error is', np.mean(test_forecast_error))
-print('the variance of the Holt-winter model error is', np.var(test_forecast_error))
-print('the RMSE of the Holt-winter model error is, ', mean_squared_error(y_test['Close'], test_forecast['Close'], squared=False))
-print('the variance of the prediction error appeared larger than the variance of the testing error')
-
-
-# plot Holt-Winter model
-
-# plot of full model
-plt.figure()
-plt.xlabel('Time')
-plt.ylabel('Close Values (USD)')
-plt.title('Holt-Winter Method on Data')
-plt.plot(y_train.index,y_train.Close,label= "Train Data", color = 'blue')
-plt.plot(y_test.index,y_test.Close,label= "Test Data", color = 'red')
-plt.plot(test_forecast, label = 'Forecasting Data', color = 'yellow')
-plt.xticks(y.index[::10287], fontsize= 10)
+holtmodel = ets.ExponentialSmoothing(y_train, trend='add', seasonal='add', damped_trend =True, seasonal_periods=56).fit()
+holt_ws = holtmodel.forecast(steps=len(y_test))
+holt_ws = pd.DataFrame(holt_ws).set_index(y_test.index)
+fig, ax = plt.subplots()
+ax.plot(y_train, label='Train Data')
+ax.plot(y_test, label='Test Data')
+ax.plot(holt_ws, label='Holt Winter Linear Forecast')
 plt.legend()
-plt.tight_layout()
-plt.show()
-
-
-# plot of test data
-plt.figure()
-plt.plot(y_test.index,y_test.Close,label= "Test Data", color = 'red')
-plt.plot(test_forecast, label = 'Forecasting Data', color = 'yellow')
-plt.xlabel('Time')
+plt.xlabel('Time (Year-Month)')
 plt.ylabel('Close Values (USD)')
-plt.title(f'Holt-Winter Method on Data with MSE = {toolbox.mse(test_forecast_error).round(4)}')
-plt.xticks(y_test.index[::(10287*.2)], fontsize= 10)
+plt.title('Additive Holt-Winters Linear Model')
+plt.show()
+holtmse = mean_squared_error(y_test, holt_ws)
+print(f'The mean squared error of the Holt-Winters forecast is: {holtmse}')
+
+# 10. Feature reduction
+
+X_fr = sm.add_constant(X_train)
+model = sm.OLS(y_train, X_fr)
+results = model.fit()
+print(results.params)
+print("All:\n",results.summary())
+
+# p-value is 0 for all features, so no feature reduction to do.
+
+# 11. Base Models
+
+avg = toolbox.average_forecast(y_train, y_test, type='test')
+holt_ws = pd.DataFrame(avg).set_index(y_test.index)
+fig, ax = plt.subplots()
+ax.plot(y_train, label = 'Train Data')
+ax.plot(y_test, label = 'Test Data')
+ax.plot(avg, label = 'Average Forecast')
+plt.title('Average Forecast Method')
 plt.legend()
-plt.tight_layout()
+plt.xlabel('Time')
+plt.ylabel('Close')
 plt.show()
 
-# note
-# mse 87444 # s 288
-
-# holt-winter train data
-plt.figure()
-m_pred_f = 1.96/np.sqrt(len(y_train.Close))
-toolbox.ACF_Plot(toolbox.autocorr(train_forecast_error,90),90)
-plt.xlabel('Lags')
-plt.ylabel('ACF')
-plt.title('Holt-Winter Train Error ACF Plot with 90 Lags')
-plt.axhspan(-m_pred_f,m_pred_f,alpha = .1, color = 'black')
-plt.tight_layout()
+naive = toolbox.naive(y_test)
+naive = pd.DataFrame(naive).set_index(y_test.index)
+fig, ax = plt.subplots()
+ax.plot(y_train, label = 'Train Data')
+ax.plot(y_test, label = 'Test Data')
+ax.plot(naive, label = 'Naive Forecast')
+plt.title('Naive Forecast Method')
+plt.legend()
+plt.xlabel('Time')
+plt.ylabel('Close')
 plt.show()
 
-
-# holt winter test data
-plt.figure()
-m_pred_f = 1.96/np.sqrt(len(y_test.Close))
-toolbox.ACF_Plot(toolbox.autocorr(test_forecast_error,90),90)
-plt.xlabel('Lags')
-plt.ylabel('ACF')
-plt.title('Holt-Winter Test Error ACF Plot with 90 Lags')
-plt.axhspan(-m_pred_f,m_pred_f,alpha = .1, color = 'black')
-plt.tight_layout()
+drift = toolbox.drift(y_train, y_test, type='test')
+drift = pd.DataFrame(drift).set_index(y_test.index)
+fig, ax = plt.subplots()
+ax.plot(y_train, label = 'Train Data')
+ax.plot(y_test, label = 'Test Data')
+ax.plot(drift, label = 'Drift Forecast')
+plt.title('Drift Forecast Method')
+plt.legend()
+plt.xlabel('Time')
+plt.ylabel('Close')
 plt.show()
+
+ses = toolbox.ses(y_train, y_test, type='test', alpha=0.5)
+ses = pd.DataFrame(ses).set_index(y_test.index)
+fig, ax = plt.subplots()
+ax.plot(y_train, label = 'Train Data')
+ax.plot(y_test, label = 'Test Data')
+ax.plot(ses, label = 'SES Forecast')
+plt.title('SES Forecast Method')
+plt.legend()
+plt.xlabel('Time')
+plt.ylabel('Close')
+plt.show()
+
+# 12. Multiple Linear Regression
+X_test_reg = sm.add_constant(X_test)
+y_pred = model.predict(X_test_reg)
+fig, ax = plt.subplots()
+ax.plot(y_train, label='train')
+ax.plot(y_test, label='test')
+ax.plot(y_pred, label='pred', ls='dashed', color='r')
+plt.legend()
+plt.ylabel('Arrests')
+plt.xlabel('Time')
+plt.title('Regression Forecast')
+plt.show()
+A = np.identity(len(model.params))
+A = A[1:,:]
+print(f'F test: {model.f_test(A)}')
+yerror_for = y_test - y_pred
+toolbox.PACF_ACF_Plot(yerror_for, 100, 'MLP PACF ACF')
+var_forecast = toolbox.est_var(yerror_for,X_test)
+print(f'variance of error: {var_forecast}\nmean of error:{sum(yerror_for)/len(yerror_for)}')
+
